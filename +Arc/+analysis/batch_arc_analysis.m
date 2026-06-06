@@ -1,4 +1,54 @@
 function [all_data, hierarchical_performance, glme]  = batch_arc_analysis(options)
+% BATCH_ARC_ANALYSIS  Load and analyze Arc spatial attention experiment data.
+%
+%   [all_data, hierarchical_performance, glme] = ...
+%       Arc.analysis.batch_arc_analysis('batch_file', FILE)
+%   loads the data files listed in FILE, computes trial-level performance
+%   variables, generates summary figures (figures 4-8), and fits generalized
+%   linear mixed-effects models for accuracy and reaction time.
+%
+%   Inputs (name-value):
+%     batch_file  - Path to the batch list file passed to
+%                   UsBox.psych_util.batch_load_data. Defaults to empty.
+%
+%   Outputs:
+%     all_data                 - Structure containing all trial-level data
+%                                and derived variables: trialRT,
+%                                trialCorrectSide, cuePct, valid,
+%                                collapsedPos, changeDistFromCue,
+%                                changeDistFromDistractor, trialValidity,
+%                                LocX, LocY.
+%     hierarchical_performance - Structure summarizing percent correct and
+%                                reaction time organized by cue percentage,
+%                                validity, and stimulus position.
+%     glme                     - Structure with two fitted GLME models:
+%                                  .percent_correct  Binomial GLME for accuracy
+%                                  .RT               Normal GLME for reaction time
+%                                Both models include trialValidity, changeDist,
+%                                changeDelay, and sideChange as fixed effects.
+%
+%   Notes:
+%     Several parameters are hard-coded for the current Arc design
+%     (11 stimulus locations, hot spots at positions 3 and 9, 1.5 s RT
+%     cutoff). A warning is issued at runtime. These values must be updated
+%     for other experimental configurations.
+%
+%     For 50/50 (no-information) trials, collapsedPos is computed relative
+%     to the left hot spot for both left- and right-side changes, reflecting
+%     an observed default left-side bias in subjects.
+%
+%   Dependencies:
+%     UsBox.psych_util  (batch_load_data, create_data_matrix, get_unique_h,
+%                        calculate_hierarchical_performance,
+%                        plot_hierarchical_performance)
+%     Arc.util.pos2xy
+%     Statistics and Machine Learning Toolbox (fitglme)
+%
+%   Example:
+%     [data, perf, models] = Arc.analysis.batch_arc_analysis('my_batch.txt');
+%
+%   See also: Arc.util.pos2xy, UsBox.psych_util.batch_load_data
+
 arguments
     options.batch_file string  = []
 end
