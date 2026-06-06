@@ -179,7 +179,7 @@ xlabel('distance from cue')
 ylabel('reaction time')
 
 
-[all_data.LocX, all_data.LocY] = Arc.pos2xy(all_data.locThisTrial, 1);
+[all_data.LocX, all_data.LocY] = Arc.util.pos2xy(all_data.locThisTrial, 1);
 
 T = table(all_data.trialCorrect,all_data.trialRT,all_data.trialCorrectSide, (all_data.trialValidity/100), ...
     all_data.collapsedPos,all_data.expectedSideThisTrial,all_data.changeDistFromCue,all_data.changeDistFromDistractor,...
