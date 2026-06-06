@@ -1,4 +1,7 @@
-function [all_data, hierarchical_performance, glme]  = batch_arc_analysis(batch_file)
+function [all_data, hierarchical_performance, glme]  = batch_arc_analysis(options)
+arguments
+    options.batch_file string  = []
+end
 
 %% define hierarchical structure for analysis
 config.levels(1).field = 'cuePct';    config.levels(1).label = '% Cue';
@@ -19,7 +22,7 @@ params.left_side_color = 1;
 params.hot_spots = [3 9];
 params.middle_location = 6;
 %% load and accumulate data from all files into single structure
-all_data   = UsBox.psych_util.batch_load_data(batch_file);
+all_data   = UsBox.psych_util.batch_load_data(options.batch_file);
 
 %% calculate reaction time. Saved value is of unknown meaning
 all_data.trialRT = all_data.responseTime - all_data.contrastChangeTime;
@@ -33,7 +36,7 @@ all_data.trialRT(slow_rt) = nan;
 all_data.trialCorrect(slow_rt) = 0;
 
 %% create cuePct variable: this is the trial validity across left and right cuing
-all_data.cuePct = nan(length(all_data.pctColor1),1);
+all_data.cuePct = nan(1,length(all_data.pctColor1));
 color_1_trials=  all_data.pctColor1 > 50;
 color_2_trials=  all_data.pctColor1 < 50;
 all_data.cuePct(color_1_trials) =  all_data.pctColor1(color_1_trials);
@@ -51,13 +54,13 @@ all_data.cue_delay = all_data.contrastChangeTime - all_data.cueOffsetTime;
 no_information_trials =  all_data.cuePct== 50;
 valid_trials = all_data.valid == 1;
 invalid_trials = all_data.valid == 0;
-all_data.valid = nan(length(all_data.pctColor1),1);
+all_data.valid = nan(1,length(all_data.pctColor1));
 all_data.valid(no_information_trials) = 0;
 all_data.valid(valid_trials) = 1;
 all_data.valid(invalid_trials) = -1;
 
 %% calculate stimulus position relative to the cued hot spots
-all_data.collapsedPos = nan(length(all_data.pctColor1),1);
+all_data.collapsedPos = nan(1,length(all_data.pctColor1));
 
 % trials where the change occurred on the left vs right side
 left_side_trials =  ismember(all_data.locThisTrial, params.left_side);
@@ -82,7 +85,7 @@ all_data.collapsedPos(no_information_trials & right_side_trials) = all_data.locT
 
 %% calculate absolute distance between cue location and contrast change
 % distance from cue 
-all_data.changeDistFromCue = nan(length(all_data.pctColor1),1);
+all_data.changeDistFromCue = nan(1,length(all_data.pctColor1));
 all_data.changeDistFromCue(color_1_trials) = abs(params.hot_spots(1) - all_data.locThisTrial(color_1_trials));
 all_data.changeDistFromCue(color_2_trials) = abs(params.hot_spots(2) - all_data.locThisTrial(color_2_trials));
 
@@ -94,7 +97,7 @@ all_data.changeDistFromCue(no_information_trials & right_side_trials) = abs(para
 
 
 %% calculate distance from distractor to contrast change
-all_data.changeDistFromDistractor = nan(length(all_data.pctColor1),1);
+all_data.changeDistFromDistractor = nan(1,length(all_data.pctColor1));
 all_data.changeDistFromDistractor(color_1_trials) = abs(params.hot_spots(2) - all_data.locThisTrial(color_1_trials));
 all_data.changeDistFromDistractor(color_2_trials) = abs(params.hot_spots(1) - all_data.locThisTrial(color_2_trials));
 
@@ -104,7 +107,7 @@ all_data.changeDistFromDistractor(no_information_trials & right_side_trials) = a
 
 
 %% calculate trial validity percentage. Mostly redundant with all_data.valid
-all_data.trialValidity = nan(length(all_data.pctColor1),1);
+all_data.trialValidity = nan(1,length(all_data.pctColor1));
 all_data.trialValidity(valid_trials) = all_data.cuePct(valid_trials);
 all_data.trialValidity(invalid_trials) = 100 - all_data.cuePct(invalid_trials);
 all_data.trialValidity(no_information_trials) = 50;
@@ -181,9 +184,9 @@ ylabel('reaction time')
 
 [all_data.LocX, all_data.LocY] = Arc.util.pos2xy(all_data.locThisTrial, 1);
 
-T = table(all_data.trialCorrect,all_data.trialRT,all_data.trialCorrectSide, (all_data.trialValidity/100), ...
-    all_data.collapsedPos,all_data.expectedSideThisTrial,all_data.changeDistFromCue,all_data.changeDistFromDistractor,...
-    all_data.cue_delay,all_data.LocX',all_data.LocY','VariableNames',{'trialCorrect','trialRT','trialCorrectSide','trialValidity',...
+T = table(all_data.trialCorrect',all_data.trialRT',all_data.trialCorrectSide', (all_data.trialValidity/100)', ...
+    all_data.collapsedPos',all_data.expectedSideThisTrial',all_data.changeDistFromCue',all_data.changeDistFromDistractor',...
+    all_data.cue_delay',all_data.LocX',all_data.LocY','VariableNames',{'trialCorrect','trialRT','trialCorrectSide','trialValidity',...
     'collapsedPos','sideChange','changeDist','changeDistFromDistractor','changeDelay','LocX','LocY'});
 
 glme.percent_correct = fitglme(T,'trialCorrectSide ~ 1 + trialValidity  + changeDist + changeDelay + sideChange',...
