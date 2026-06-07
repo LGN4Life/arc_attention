@@ -62,10 +62,9 @@ config.rt_field = 'trialRT';
 
 %% define parameters for analysis
 
-% reaction time limit: reaction times slower than this limit will be marked
-% as no responses
+
 warning('These hard coded values will not be valid across all experiments\n')
-params.reaction_time_limit = 1.5;
+params.reaction_time_limit = 1.5; % reaction time limit: reaction times slower than this limit will be marked as no responses
 params.left_side = find([true(1,5) false(1,6)]);
 params.right_side = find([false(1,6) true(1,5)]);
 params.left_side_color = 1;
@@ -125,7 +124,7 @@ else
     cued_right_side =  all_data.pctColor1 > 50;
 end
 
-% distance between stim change and cued location on left trials 
+% distance between stimulus change and cued location
 warning('collapsed position for all no info trials is intentionally set relative to the left hotspot because subjects seem to have a default left side bias.\n')
 all_data.collapsedPos(cued_left_side) = all_data.locThisTrial(cued_left_side) - params.hot_spots(1);
 all_data.collapsedPos(cued_right_side) = params.hot_spots(2) -  all_data.locThisTrial(cued_right_side);
